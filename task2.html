@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 2</title>
+</head>
+<body>
+    <textarea id="template-content" rows="6" style="width: 100%">Этот текст редактируемый. Содержит пустые поля ввода {{input}}, а также поля ввода, которые содержат какую-то информацию {{input:какой-то текст}}. Также, текст содержит области {{textarea}} без информации и {{textarea:какой-то длинный текст, в котором могут встречаться двоеточия:}} с информацией.</textarea>
+    <button id="convert-template">Convert</button>
+    <hr>
+    <div id="results" style="padding:10px; background:#eaeaea;"></div>
+    <button id="export-content">Export</button>
+
+    <script>
+        /**
+         * Template string with custom syntax
+         * @param {String} template
+         * @returns {String}
+         */
+        function templateImport(template) {
+            template = template.replace(/{{([a-z]+)(:)?([^}]+)?}}/g, (match, tag, separator, content) => {
+                if (!content) content = '';
+
+                switch (tag) {
+                    case 'input':
+                        return '<input value="' + content + '">';
+                    case 'textarea':
+                        return '<textarea>' + content + '</textarea>';
+                    default:
+                        return match;
+                }
+            });
+
+            return template;
+        }
+
+        /**
+         * Parse DOM string to template syntax
+         * @param {String} content
+         * @returns {String}
+         */
+        function templateExport(content) {
+            content = content.replace(/<input( value="(.*?)")?\/?>/g, (match, attr, value) => {
+                return '{{input' + (value ? ':' + value : '') + '}}';
+            });
+            content = content.replace(/<textarea>([^]*?)<\/textarea>/g, (match, value) => {
+                return '{{textarea' + (value ? ':' + value : '') + '}}';
+            });
+
+            return content;
+        }
+
+        /**
+         * Parse nodeList HTML with actual inputs value
+         * @param {NodeList} nodeList
+         * @returns {String}
+         */
+        function getActualInnerHTML(nodeList) {
+            return Array.from(nodeList).reduce((acc, node) => {
+                switch (node.nodeName) {
+                    case 'INPUT':
+                        acc += '<input value="' + node.value + '">';
+                        break;
+                    case 'TEXTAREA':
+                        acc += '<textarea>' + node.value + '</textarea>';
+                        break;
+                    default:
+                        acc += node.nodeValue;
+                }
+
+                return acc;
+            }, '');
+        }
+
+
+        // Convert button
+        document.getElementById('convert-template').addEventListener('click', (e) => {
+            const template = document.getElementById('template-content').value;
+            const content = templateImport(template);
+
+            document.getElementById('results').innerHTML = content;
+
+            e.stopPropagation();
+        });
+
+        // Export button
+        document.getElementById('export-content').addEventListener('click', (e) => {
+            const content = getActualInnerHTML(document.getElementById('results').childNodes);
+            const template = templateExport(content);
+
+            console.log(template);
+
+            e.stopPropagation();
+        });
+    </script>
+</body>
+</html>

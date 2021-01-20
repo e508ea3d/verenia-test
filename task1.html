@@ -39,7 +39,7 @@
         }
 
         /**
-         * Async products loading with handled counter
+         * Async products loading with manual handled counter
          * @param {Number} number Products number (request calls number)
          */
         function loadProducts(number) {
@@ -53,6 +53,7 @@
                     }
                     products.push(value);
                 }).finally(() => {
+                    // Waiting for all of the promises to finish
                     loaded++;
                     if (loaded == number) {
                         productsLoaded(products);
